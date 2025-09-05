@@ -1,0 +1,89 @@
+﻿
+
+<div id="@quillId"></div>
+
+@code
+{
+    string quillId = $"idDiv-{Guid.NewGuid().ToString("N")}";
+
+    string contents;
+    [Parameter] public string Contents
+    {
+        get
+        {
+            return contents;
+        }
+        set
+        {
+            if (contents != value)
+            {
+                contents = value;
+                SetContents(contents);
+            }
+        }
+    }
+    [Parameter] public EventCallback<string> ContentsChanged { get; set; }
+
+    async protected override Task OnAfterRenderAsync(bool firstRender)
+    {
+        await InitializeJS();
+    }
+
+    #region JS
+    [Inject] IJSRuntime _JS { get; set; }
+    IJSObjectReference? jsObjectReference;
+    DotNetObjectReference<Quill>? dotNetObjectReference;
+
+    async protected Task InitializeJS()
+    {
+        try
+        {
+            jsObjectReference = await _JS.InvokeAsync<IJSObjectReference>("import", "./js/quill/main.js?v=38");
+            dotNetObjectReference ??= DotNetObjectReference.Create(this);
+            if (jsObjectReference != null)
+                await jsObjectReference.InvokeVoidAsync("InitializeQuillBlazor", dotNetObjectReference, quillId);
+            await SetContents(contents);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    async protected Task<string> GetContents()
+    {
+        try
+        {
+            string content = await jsObjectReference.InvokeAsync<string>("getContents", quillId);
+            return content;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);    
+        }
+        return "";
+    }
+
+    async protected Task SetContents(string contents)
+    {
+        try
+        {
+            await jsObjectReference.InvokeVoidAsync("setContents", quillId, contents);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnTextChange(string contents)
+    {
+        await ContentsChanged.InvokeAsync(contents);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    #endregion
+
+
+}

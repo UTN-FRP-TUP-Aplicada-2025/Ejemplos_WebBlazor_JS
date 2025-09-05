@@ -1,24 +1,60 @@
 ﻿
-@inject IJSRuntime JS
-
-
 <div id="contenedor"></div>
 
-<div>@mensaje</div>
-
-
 @code {
-    private IJSObjectReference? _module;
-    private DotNetObjectReference<Ejemplo8>? objRef;
     string mensaje;
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    string text;
+    [Parameter]public string Text 
     {
-        if (firstRender)
+        get
         {
-            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/Ejemplo8/main.js?v=27");
-            objRef ??= DotNetObjectReference.Create(this);
-            await _module.InvokeVoidAsync("initilizeEjemplo8Blazor", objRef, "contenedor");
+            return text;
+        }
+        set
+        {
+            if (text != value)
+            {
+                text = value;
+
+                setText(text);
+
+            }
+        }
+    }
+
+    [Parameter] public EventCallback<string> TextChanged { get; set; }
+
+    #region JS 
+    [Inject] IJSRuntime _JS { get; set; }
+    private IJSObjectReference? jsObjectReference;
+    private DotNetObjectReference<Ejemplo8>? dotNetObjectReference;
+
+    protected async Task Initialize()
+    {
+        try
+        {
+            jsObjectReference ??= await _JS.InvokeAsync<IJSObjectReference>("import", "./js/Ejemplo8/main.js?v=31");
+            dotNetObjectReference ??= DotNetObjectReference.Create(this);
+            await jsObjectReference.InvokeVoidAsync("initilizeEjemplo8Blazor", dotNetObjectReference, "contenedor");
+
+            await setText(text);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    protected async Task setText(string text)
+    {
+        try
+        {
+            await jsObjectReference.InvokeVoidAsync("setText", "contenedor", text);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
         }
     }
 
@@ -26,15 +62,28 @@
     public async Task OnTextChange(string resultado)
     {
         mensaje = resultado;
+
+        await TextChanged.InvokeAsync(resultado);
+
         await InvokeAsync(StateHasChanged);
     }
 
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Initialize();
+        }
+    }
+       
     public async ValueTask DisposeAsync()
     {
-        if (_module is not null)
+        if (jsObjectReference is not null)
         {
-            await _module.DisposeAsync();
+            await jsObjectReference.DisposeAsync();
         }
-        objRef?.Dispose();
+        dotNetObjectReference?.Dispose();
     }
 }
