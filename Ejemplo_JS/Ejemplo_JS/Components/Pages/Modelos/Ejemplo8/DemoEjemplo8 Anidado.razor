@@ -1,0 +1,33 @@
+﻿@page "/demo-ejemplo8-anidado"
+@using Ejemplo_JS.Components.Pages.Modelos.Ejemplo8.Component
+
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+<h3>Demo 8</h3>
+
+
+<div class="row">
+<div class="card-3">
+    <button class="btn btn-primary" @onclick="OnVer">Ver Editor</button>
+</div>
+
+<div class="card-3">
+    @if(esVisible)
+    {
+        <Ejemplo8 @ref="ejemplo8"></Ejemplo8>
+    }
+</div>
+
+</div>
+
+@code {
+    Ejemplo8 ejemplo8;
+
+    bool esVisible = false;
+
+    protected void OnVer()
+    {
+        esVisible = !esVisible;    
+    }
+}
