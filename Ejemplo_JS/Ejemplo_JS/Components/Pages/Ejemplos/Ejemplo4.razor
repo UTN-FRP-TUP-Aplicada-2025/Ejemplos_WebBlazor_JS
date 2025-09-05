@@ -1,0 +1,23 @@
+﻿@page "/ejemplo4"
+
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+
+<p>@mensaje</p>
+
+@code
+{
+    [Inject] IJSRuntime JS { get; set; }
+
+    private string mensaje;
+
+
+    //tiene que ser static
+    [JSInvokable]
+    public static Task MostrarMensajeDesdeJS(string texto)
+    {
+        Console.WriteLine("JS dijo: " + texto);
+        return Task.CompletedTask;
+    }
+}

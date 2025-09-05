@@ -1,0 +1,23 @@
+﻿@page "/ejemplo1"
+
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+@inject IJSRuntime JS
+
+<button @onclick="OnMostrar">Invocar</button>
+
+<input type="inputDatos" id="datos" />
+
+@mostrar
+
+@code {
+    string mostrar = "";
+
+    private async Task OnMostrar()
+    {
+        //captura datos desde el input
+        mostrar = await JS.InvokeAsync<string>("eval", "document.getElementById('datos').value");
+    }
+}
+
