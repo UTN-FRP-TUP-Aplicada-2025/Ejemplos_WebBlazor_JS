@@ -1,32 +1,48 @@
 class QuillBlazor
 {
-    constructor(dotnetHelper, idDiv)
+    constructor(dotnetHelper, idDiv, options)
     {
         this.containter = document.getElementById(idDiv);
         this.dotnetHelper = dotnetHelper;
 
-        this.quill = new Quill('#' + idDiv, { theme: 'snow' });
+        this.quill = new Quill('#' + idDiv, { theme: 'snow' }, options);
 
-        this.quill.on('text-change', (delta, oldContents, source) => this.textChange(delta, oldContents, source) );
+        this.quill.on('text-change', (delta, oldContents, source) => this.textChange(delta, oldContents, source));
+
+        this.quill.on('selection-change', (range, oldRange, source) => this.focusOut(range, oldRange, source));
     }
 
     textChange(delta, oldContents, source)
     {
-        console.log('El editor ha cambiado!');
-        console.log('Cambios:', delta);
-        console.log('Contenido anterior:', oldContents);
-        console.log('Fuente del cambio:', source);
-
-        // delta: los cambios realizados
-        // oldContents: contenido del editor antes del cambio
-        // source: origen del cambio ('user' o 'api')
-
         try
         {
-            if (this.dotnetHelper && source =='user')
-                this.dotnetHelper.invokeMethodAsync("OnTextChange", this.quill.root.innerHTML);
+            if (this.dotnetHelper && source === 'user')
+            {
+                //const content = this.quill.root.innerHTML;
+                //this.dotnetHelper.invokeMethodAsync('OnContentChanged', content);
+            }
             else
                 console.log('notificar: dotnetHelper es null');
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }
+
+    focusOut(range, oldRange, source) 
+    {
+        try {
+            if (range === null) {
+                // Esto es equivalente a focusout/blur
+                console.log('El editor perdió el foco');
+
+                const content = this.quill.root.innerHTML;
+                this.dotnetHelper.invokeMethodAsync('OnContentChanged', content);
+
+            } else if (oldRange === null) {
+                // Esto es equivalente a focusin/focus
+                console.log('El editor recibió el foco');
+            }
         }
         catch (error) {
             console.log(error);
@@ -54,30 +70,33 @@ class QuillBlazor
         try
         {
             if (this.quill)
-                this.quill.root.innerHTML = contents;  
-            else
-                console.log('notificar: dotnetHelper es null');
+            {
+                this.quill.root.innerHTML = contents;
+            }
         }
-        catch (error) {
+        catch (error)
+        {
             console.log(error);
         }
     }
 }
 
-export function InitializeQuillBlazor(dotnetHelper, idDiv)
+export function InitializeQuillBlazor(dotnetHelper, idDiv, options)
 {
     try
     {
         let element = document.getElementById(idDiv)
         if (!element.quillBlazor)
         {
-            element.quillBlazor = new QuillBlazor(dotnetHelper, idDiv);
+            element.quillBlazor = new QuillBlazor(dotnetHelper, idDiv, options);
+            return true;
         }
     }
     catch (error)
     {
         console.log(error);
     }
+    return false;
 }
 
 export function getContents(idDiv)
