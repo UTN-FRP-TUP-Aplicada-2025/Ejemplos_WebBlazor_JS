@@ -20,5 +20,6 @@
 
         // Ruta relativa desde wwwroot
         template = await Http.GetStringAsync(url);
+        template = template.Replace("$$Nombre$$", "Ñato");
     }
 }
