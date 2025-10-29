@@ -1,0 +1,17 @@
+﻿@page "/ejemplo2"
+
+@inject IJSRuntime JS
+
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+<h3>Mostrar mensaje</h3>
+
+<button @onclick="MostrarMensaje">Mostrar mensaje JS</button>
+
+@code {
+    private async Task MostrarMensaje()
+    {
+        await JS.InvokeVoidAsync("mostrarAlerta", "¡Hola desde Blazor!");
+    }
+}

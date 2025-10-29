@@ -1,0 +1,40 @@
+﻿@page "/ejemplo6"
+
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+<h3>Mapa</h3>
+<div>@mensaje</div>
+
+@code {
+    [Inject] IJSRuntime JS { get; set; }
+    private IJSObjectReference? _module;
+    private DotNetObjectReference<Ejemplo6>? objRef;
+    string mensaje;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _module ??= await JS.InvokeAsync<IJSObjectReference>("import", "./js/Ejemplo6/main.js?v=15");
+            objRef ??= DotNetObjectReference.Create(this);
+            await _module.InvokeVoidAsync("initilize", objRef);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnMensaje(string resultado)
+    {
+        mensaje = resultado;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is not null)
+        {
+            await _module.DisposeAsync();
+        }
+        objRef?.Dispose();
+    }
+}

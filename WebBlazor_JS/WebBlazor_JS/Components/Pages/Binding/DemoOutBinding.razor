@@ -1,0 +1,81 @@
+﻿@page "/demo-out-binding"
+@using WebBlazor_JS
+@using WebBlazor_JS.Components
+@using WebBlazor_JS.Components.Pages.DemosComponent.Quill.Component
+
+<h3>DemoOutBinding</h3>
+
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+
+<div class="card">
+
+    <div class="card-header">
+        <InputCheckbox class="form-check" @bind-Value="EsVisible"></InputCheckbox>
+        <label for="visible"></label>
+    </div>
+
+    <div>
+        @if (esVisible)
+        {
+            <Quill @ref="quillnote" @bind-Contents="prueba"></Quill>
+        }        
+    </div>
+
+    <div>@((MarkupString)prueba)</div>
+</div>
+
+@code {
+    private bool esVisible = true;
+    bool EsVisible 
+    {
+        get
+        {
+            return esVisible;
+        }
+        set
+        {
+            if (value == false)
+            {
+                //GuardarContenidoAsync();
+                
+                quillnote.GetContents().ContinueWith(task =>
+                {
+                    if (task.Status == TaskStatus.RanToCompletion)
+                    {
+                        prueba = task.Result;
+                        InvokeAsync(StateHasChanged);
+                    }
+                });
+                
+            }
+            esVisible = value;
+        }
+    }
+    /*
+    private async void GuardarContenidoAsync()
+    {
+        try
+        {
+            prueba = await quillnote.GetContents();
+            await InvokeAsync(StateHasChanged); // refresca UI
+        }
+        catch (Exception ex)
+        {
+            // Manejar error
+        }
+    }
+    */
+
+    string valor { get; set; } = "Initial Value";
+
+    string prueba { get; set; }
+
+    Quill quillnote;
+
+    public void OnChange()
+    {
+        
+    }
+}

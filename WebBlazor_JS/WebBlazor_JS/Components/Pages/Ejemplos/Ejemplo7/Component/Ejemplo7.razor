@@ -1,0 +1,37 @@
+﻿
+
+
+<div>@mensaje</div>
+
+@code {
+    [Inject] IJSRuntime _JS { get; set; }
+    private IJSObjectReference? jsObjectReference;
+    private DotNetObjectReference<Ejemplo7>? dotNetObjectReference;
+    string mensaje;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            jsObjectReference ??= await _JS.InvokeAsync<IJSObjectReference>("import", "./js/Ejemplo7/main.js?v=15");
+            dotNetObjectReference ??= DotNetObjectReference.Create(this);
+            await jsObjectReference.InvokeVoidAsync("initilize", dotNetObjectReference);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnMensaje(string resultado)
+    {
+        mensaje = resultado;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (jsObjectReference is not null)
+        {
+            await jsObjectReference.DisposeAsync();
+        }
+        dotNetObjectReference?.Dispose();
+    }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "googlemaps-wrapper",
+  "version": "1.0.0",
+  "description": "Google Maps wrapper with TypeScript and Webpack",
+  "main": "dist/googlemaps.min.js",
+  "scripts": {
+    "build": "webpack --mode production",
+    "start": "webpack serve --mode development --open",
+    "dev": "webpack serve --mode development --open"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.4",
+    "@babel/preset-env": "^7.28.3",
+    "@babel/register": "^7.28.3",
+    "@types/google.maps": "^3.53.4",
+    "dotenv": "^17.2.2",
+    "dotenv-webpack": "^8.1.1",
+    "html-webpack-plugin": "^5.6.4",
+    "ts-loader": "^9.5.4",
+    "typescript": "^4.9.5",
+    "webpack": "^5.101.3",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.2"
+  },
+  "dependencies": {
+    "@googlemaps/js-api-loader": "^1.15.1"
+  }
+}

@@ -1,0 +1,90 @@
+﻿@implements IAsyncDisposable
+
+<div id="contenedor"></div>
+
+@code {
+    string mensaje;
+
+    string text;
+    [Parameter]public string Text 
+    {
+        get
+        {
+            return text;
+        }
+        set
+        {
+            if (text != value)
+            {
+                text = value;
+
+                setText(text);
+
+            }
+        }
+    }
+
+    [Parameter] public EventCallback<string> TextChanged { get; set; }
+
+    #region JS 
+    [Inject] IJSRuntime _JS { get; set; }
+    private IJSObjectReference? jsObjectReference;
+    private DotNetObjectReference<Ejemplo8>? dotNetObjectReference;
+
+    protected async Task Initialize()
+    {
+        try
+        {
+            jsObjectReference ??= await _JS.InvokeAsync<IJSObjectReference>("import", "./js/Ejemplo8/main.js?v=36");
+            dotNetObjectReference ??= DotNetObjectReference.Create(this);
+            await jsObjectReference.InvokeVoidAsync("initilizeEjemplo8Blazor", dotNetObjectReference, "contenedor");
+
+            await setText(text);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    protected async Task setText(string text)
+    {
+        try
+        {
+            await jsObjectReference.InvokeVoidAsync("setText", "contenedor", text);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+    }
+
+    [JSInvokable]
+    public async Task OnTextChange(string resultado)
+    {
+        mensaje = resultado;
+
+        await TextChanged.InvokeAsync(resultado);
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    #endregion
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Initialize();
+        }
+    }
+       
+    public async ValueTask DisposeAsync()
+    {
+        if (jsObjectReference is not null)
+        {
+            await jsObjectReference.DisposeAsync();
+        }
+        dotNetObjectReference?.Dispose();
+    }
+}

@@ -1,0 +1,25 @@
+﻿@page "/demo-template"
+
+<h3>Template</h3>
+
+
+@((MarkupString)(template))
+
+@code {
+    [Inject] HttpClient Http { get; set; }
+    [Inject] NavigationManager NavManager { get; set; }
+
+    string template;
+
+    protected override async Task OnInitializedAsync()
+    {
+        //string url = "https://localhost:7049/Templates/prueba.html";
+
+        var baseUrl = NavManager.BaseUri; // ej: "https://localhost:7049/"
+        var url = $"{baseUrl}Templates/prueba.html";
+
+        // Ruta relativa desde wwwroot
+        template = await Http.GetStringAsync(url);
+        template = template.Replace("$$Nombre$$", "Ñato");
+    }
+}

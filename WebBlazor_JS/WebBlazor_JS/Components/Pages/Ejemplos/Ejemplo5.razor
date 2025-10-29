@@ -1,0 +1,33 @@
+﻿@page "/ejemplo5"
+
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+<button @onclick="Iniciar">Invocar instancia</button>
+
+<p>@resultado</p>
+
+@code {
+    [Inject] IJSRuntime JS { get; set; }
+    private string resultado;
+
+    private DotNetObjectReference<Ejemplo5> objRef;
+
+    protected override void OnInitialized()
+    {
+        objRef = DotNetObjectReference.Create(this);
+    }
+
+    private async Task Iniciar()
+    {
+        await JS.InvokeVoidAsync("llamarInstanciaCSharp", objRef);
+    }
+
+    [JSInvokable]
+    public Task MostrarInstancia(string valor)
+    {
+        resultado = $"Mensaje recibido: {valor}";
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+}

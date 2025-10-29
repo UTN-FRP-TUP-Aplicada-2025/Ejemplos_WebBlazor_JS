@@ -1,0 +1,173 @@
+﻿@page "/demo-google-maps-components"
+
+@using WebBlazor_JS
+@using WebBlazor_JS.Components
+@using WebBlazor_JS.Components.Pages.DemosComponent.GoogleMaps.Component
+@using WebBlazor_JS.Components.Pages.DemosComponent.Maps.Component
+
+@rendermode InteractiveServer
+@attribute [StreamRendering]
+
+<h3>Demo</h3>
+
+<div class="container">
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+
+                    <!-- Localidad -->
+                    <div class="mb-3">
+                        <label class="form-label">Localidad</label>
+                        <InputSelect class="form-select" @bind-Value="localidad.Id" @bind-Value:after="OnDireccionChanged">
+                            <option value="0">Elija una localidad</option>
+                            @foreach (var localidad in localidades)
+                            {
+                                <option value="@localidad.Id">@localidad.Descripcion</option>
+                            }
+                        </InputSelect>
+                    </div>
+
+                    <!-- Calle y Número -->
+                    <div class="row mb-3">
+                        <div class="col">
+                            <label class="form-label">Calle</label>
+                            <InputText class="form-control" @bind-Value="domicilio.Calle" @bind-Value:after="OnDireccionChanged" />
+                        </div>
+                        <div class="col">
+                            <label class="form-label">Número</label>
+                            <InputText class="form-control" @bind-Value="domicilio.Numero" @bind-Value:after="OnDireccionChanged" />
+                        </div>
+                    </div>
+
+                    <!-- Coordenadas -->
+                    <div class="mb-3">
+                        <label class="form-label">Coordenadas</label>
+                        <div>@($"{coordenadas?.lat}, {coordenadas?.lng}")</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Mapa -->
+            <GoogleMaps @ref="@maps" Token="@ApiKey" Zoom="@zoom" Direccion="@direccion" @bind-Coordenadas="coordenadas"></GoogleMaps>
+        </div>
+    </div>
+
+</div>
+
+@code 
+{
+    #region models instances
+
+    LocalidadViewModel localidad = new();
+    DomicilioViewModel domicilio = new();
+
+    CoordenadasGoogle coordenadas = new();
+
+    List<LocalidadViewModel> localidades = new()
+    {
+        new LocalidadViewModel{ Id=1, Descripcion="Paraná, Entre Ríos, Argentina"},
+        new LocalidadViewModel{ Id=2, Descripcion="Santa Fé, Santa Fé, Argentina"},
+        new LocalidadViewModel{ Id=3, Descripcion="Rosario, Santa Fé, Argentina"}
+    };
+
+    #endregion
+
+    GoogleMaps maps = default!;
+    string ApiKey;
+    int zoom=13;
+    string direccion;
+
+    @inject IConfiguration Configuration
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if(firstRender)
+        {
+            //@inject IConfiguration Configuration
+            string apikey=Configuration["GOOGLE_MAPS_API_KEY"];
+            ApiKey = apikey;
+            zoom = 13;
+        }
+    }
+
+    async Task OnDireccionChanged()
+    {      
+        domicilio.Localidad = (from l in localidades where l.Id == localidad.Id select l)?.FirstOrDefault();
+        direccion = domicilio.DireccionMaps();
+        //await maps.SetDireccionMaps(direccion);
+    }
+
+    class LocalidadViewModel
+    {
+        public int? Id { get; set; }
+        public string? Descripcion { get; set; }
+    }
+
+    class DomicilioViewModel
+    {
+        LocalidadViewModel? localidad;
+        public LocalidadViewModel? Localidad
+        {
+            get
+            {
+                return localidad;
+            }
+            set
+            {
+                if (localidad?.Id != value?.Id)
+                {
+                    localidad = value;
+                    Calle = null;
+                }
+            }
+        }
+
+        string? calle;
+        public string? Calle
+        {
+            get
+            {
+                return calle;
+            }
+            set
+            {
+                if (calle != value)
+                {
+                    calle = value;
+                    Numero = null;
+                }
+            }
+        }
+
+        public string? numero;
+        public string? Numero
+        {
+            get
+            {
+                return numero;
+            }
+            set
+            {
+                if (numero != value)
+                {
+                    numero = value;
+                    Lat = 0;
+                    Lng = 0;
+                }
+            }
+        }
+
+        public double Lat { get; set; }
+        public double Lng { get; set; }
+
+        public string DireccionMaps()
+        {
+            if (localidad != null)
+                return $"{calle} {numero}, {localidad?.Descripcion}";
+            return "";
+        }
+    }
+}

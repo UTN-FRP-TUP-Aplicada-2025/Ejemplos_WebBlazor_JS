@@ -1,0 +1,39 @@
+﻿@page "/demo-template2"
+
+<h3>Template 2</h3>
+
+
+@((MarkupString)(template))
+
+@code {
+    string template;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTemplateWithDirectPath();
+    }
+
+    private async Task LoadTemplateWithDirectPath()
+    {
+        try
+        {
+            var currentDirectory = Directory.GetCurrentDirectory();
+            var filePath = Path.Combine(currentDirectory, "wwwroot", "Templates", "prueba.html");
+
+            if (File.Exists(filePath))
+            {
+                template = await File.ReadAllTextAsync(filePath);
+
+                template=template.Replace("$$Nombre$$", "Ñato");
+            }
+            else
+            {
+                template = "<p>Archivo no encontrado en ruta directa</p>";
+            }
+        }
+        catch (Exception ex)
+        {
+            template = $"<p>Error: {ex.Message}</p>";
+        }
+    }
+}
